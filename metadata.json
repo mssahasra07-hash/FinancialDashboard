@@ -1,0 +1,6 @@
+{
+  "name": "FinTrack - Personal Finance & Expense Manager",
+  "description": "Modern, responsive Personal Finance & Expense Management Dashboard for college students and employees with PostgreSQL, budget limits, savings goals, and spending insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
