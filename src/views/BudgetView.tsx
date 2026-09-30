@@ -8,7 +8,7 @@ export const BudgetView: React.FC = () => {
   const { apiFetch, profile } = useAuth();
   const currentMonth = new Date().toISOString().slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [totalBudget, setTotalBudget] = useState<number>(profile?.profileType === 'student' ? 15000 : 65000);
+  const [totalBudget, setTotalBudget] = useState<number>(0);
   const [categories, setCategories] = useState<Array<{ category: string; allocatedAmount: number }>>([]);
   const [spentMap, setSpentMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);

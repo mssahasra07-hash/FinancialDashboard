@@ -195,9 +195,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <p className={`text-2xl font-bold mt-2 ${remainingBalance < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
             {currency}{remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
           </p>
-          <div className="mt-2 flex items-center text-xs text-slate-500 dark:text-slate-400 gap-1">
-            {remainingBalance >= 0 ? (
+          <div className="mt-2 flex items-center text-xs text-slate-500 dark:text-slate-400 gap-1 min-h-[18px]">
+            {totalIncome === 0 && totalExpenses === 0 && (!recentTransactions || recentTransactions.length === 0) ? (
+              null
+            ) : remainingBalance > 0 ? (
               <span className="text-emerald-600 dark:text-emerald-400 font-medium">Healthy buffer</span>
+            ) : remainingBalance === 0 ? (
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Balanced buffer</span>
             ) : (
               <span className="text-rose-600 dark:text-rose-400 font-semibold">Over-budget deficit</span>
             )}
@@ -229,19 +233,30 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Monthly Budget Progress</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Spent {currency}{totalExpenses.toFixed(0)} of {currency}{totalBudget.toFixed(0)} target budget
+              {totalBudget > 0
+                ? `Spent ${currency}${totalExpenses.toFixed(0)} of ${currency}${totalBudget.toFixed(0)} target budget`
+                : 'No monthly budget target configured yet'}
             </p>
           </div>
           <div className="text-right">
-            <span className={`text-sm font-bold ${
-              budgetSpentPercentage >= 100
-                ? 'text-rose-600 dark:text-rose-400'
-                : budgetSpentPercentage >= 80
-                ? 'text-amber-600 dark:text-amber-400'
-                : 'text-indigo-600 dark:text-indigo-400'
-            }`}>
-              {budgetSpentPercentage}% Used
-            </span>
+            {totalBudget > 0 ? (
+              <span className={`text-sm font-bold ${
+                budgetSpentPercentage >= 100
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : budgetSpentPercentage >= 80
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-indigo-600 dark:text-indigo-400'
+              }`}>
+                {budgetSpentPercentage}% Used
+              </span>
+            ) : (
+              <button
+                onClick={() => onNavigateTab('budget')}
+                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Set Target Budget →
+              </button>
+            )}
           </div>
         </div>
 
@@ -254,7 +269,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 ? 'bg-amber-500'
                 : 'bg-indigo-600'
             }`}
-            style={{ width: `${Math.min(100, budgetSpentPercentage)}%` }}
+            style={{ width: `${totalBudget > 0 ? Math.min(100, budgetSpentPercentage) : 0}%` }}
           />
         </div>
       </div>
@@ -275,46 +290,52 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
 
             <div className="space-y-3.5">
-              {categoryBreakdown.slice(0, 6).map((cat) => {
-                return (
-                  <div key={cat.category} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{cat.category}</span>
-                      <span className="text-slate-500 dark:text-slate-400">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          {currency}{cat.spent.toFixed(0)}
-                        </span>{' '}
-                        / {currency}{cat.budget.toFixed(0)}
-                        {cat.budget > 0 && (
-                          <span
-                            className={`ml-1 font-semibold ${
-                              cat.isExceeded
-                                ? 'text-rose-600 dark:text-rose-400'
-                                : cat.isWarning
-                                ? 'text-amber-600 dark:text-amber-400'
-                                : 'text-slate-500 dark:text-slate-400'
-                            }`}
-                          >
-                            ({cat.percentage.toFixed(0)}%)
-                          </span>
-                        )}
-                      </span>
+              {categoryBreakdown && categoryBreakdown.some((c) => c.budget > 0 || c.spent > 0) ? (
+                categoryBreakdown.filter((c) => c.budget > 0 || c.spent > 0).slice(0, 6).map((cat) => {
+                  return (
+                    <div key={cat.category} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{cat.category}</span>
+                        <span className="text-slate-500 dark:text-slate-400">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {currency}{cat.spent.toFixed(0)}
+                          </span>{' '}
+                          / {currency}{cat.budget.toFixed(0)}
+                          {cat.budget > 0 && (
+                            <span
+                              className={`ml-1 font-semibold ${
+                                cat.isExceeded
+                                  ? 'text-rose-600 dark:text-rose-400'
+                                  : cat.isWarning
+                                  ? 'text-amber-600 dark:text-amber-400'
+                                  : 'text-slate-500 dark:text-slate-400'
+                              }`}
+                            >
+                              ({cat.percentage.toFixed(0)}%)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            cat.isExceeded
+                              ? 'bg-rose-500'
+                              : cat.isWarning
+                              ? 'bg-amber-500'
+                              : 'bg-indigo-600'
+                          }`}
+                          style={{ width: `${Math.min(100, cat.percentage || 0)}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          cat.isExceeded
-                            ? 'bg-rose-500'
-                            : cat.isWarning
-                            ? 'bg-amber-500'
-                            : 'bg-indigo-600'
-                        }`}
-                        style={{ width: `${Math.min(100, cat.percentage || 0)}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+                  No category budget allocations yet. Click "Manage Budgets" to allocate limits!
+                </div>
+              )}
             </div>
           </div>
 

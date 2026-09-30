@@ -36,9 +36,8 @@ app.post('/api/auth/sync', requireAuth, async (req: AuthRequest, res) => {
     const dbUser = await getOrCreateUser(uid, email, displayName, photoUrl);
     let profile = await getUserProfile(uid);
 
-    // If profile is fresh, auto seed demo transactions & goals
+    // If profile is fresh, keep clean slate with no buffer/mock entries
     if (!profile) {
-      await seedDemoDataForUser(uid, 'student');
       profile = await getUserProfile(uid);
     }
 
@@ -66,11 +65,6 @@ app.put('/api/profile', requireAuth, async (req: AuthRequest, res) => {
       ...(dashboardBg && { dashboardBg }),
       ...(onboardingCompleted !== undefined && { onboardingCompleted }),
     });
-
-    // If user selected profile in onboarding, initialize budget limits if not set
-    if (profileType) {
-      await seedDemoDataForUser(uid, profileType);
-    }
 
     res.json(updated);
   } catch (error: any) {
@@ -126,7 +120,7 @@ app.get('/api/dashboard/summary', requireAuth, async (req: AuthRequest, res) => 
       .where(and(eq(budgets.userId, uid), eq(budgets.month, currentMonth)))
       .limit(1);
 
-    const totalBudget = budgetRecord[0]?.totalBudget || (profileType === 'student' ? 1200 : 3800);
+    const totalBudget = budgetRecord[0]?.totalBudget ?? 0;
     const budgetPercentage = totalBudget > 0 ? Math.min(100, (totalExpenses / totalBudget) * 100) : 0;
 
     // 3. Category budget limits
@@ -457,35 +451,15 @@ app.get('/api/budgets', requireAuth, async (req: AuthRequest, res) => {
       .limit(1);
 
     if (!existingBudget[0]) {
-      // If none set for this month, return template based on profile
-      const profile = await getUserProfile(uid);
-      const isStudent = profile?.profileType === 'student';
-      const defaultTotal = isStudent ? 15000 : 65000;
+      // For a new user without a configured budget, return 0 / null buffer entries
+      const categories = [
+        'Food', 'Hostel/Rent', 'Education', 'Transport', 'Entertainment', 'Shopping', 'Subscriptions', 'Healthcare', 'Other'
+      ].map((category) => ({ category, allocatedAmount: 0 }));
 
       return res.json({
         month,
-        totalBudget: defaultTotal,
-        categories: isStudent ? [
-          { category: 'Food', allocatedAmount: 4500 },
-          { category: 'Hostel/Rent', allocatedAmount: 5000 },
-          { category: 'Education', allocatedAmount: 2000 },
-          { category: 'Transport', allocatedAmount: 1000 },
-          { category: 'Entertainment', allocatedAmount: 1000 },
-          { category: 'Shopping', allocatedAmount: 800 },
-          { category: 'Subscriptions', allocatedAmount: 300 },
-          { category: 'Healthcare', allocatedAmount: 400 },
-          { category: 'Other', allocatedAmount: 0 },
-        ] : [
-          { category: 'Hostel/Rent', allocatedAmount: 22000 },
-          { category: 'Food', allocatedAmount: 12000 },
-          { category: 'Transport', allocatedAmount: 5000 },
-          { category: 'Shopping', allocatedAmount: 6000 },
-          { category: 'Entertainment', allocatedAmount: 4000 },
-          { category: 'Subscriptions', allocatedAmount: 1500 },
-          { category: 'Healthcare', allocatedAmount: 3500 },
-          { category: 'Education', allocatedAmount: 3000 },
-          { category: 'Other', allocatedAmount: 8000 },
-        ],
+        totalBudget: 0,
+        categories,
         isSaved: false,
       });
     }

@@ -11,27 +11,16 @@ interface OnboardingModalProps {
 export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
   const { user, profile, apiFetch, updateProfileState } = useAuth();
   const [profileType, setProfileType] = useState<ProfileType>(profile?.profileType || 'student');
-  const [income, setIncome] = useState<string>(profileType === 'student' ? '15000' : '65000');
-  const [currency, setCurrency] = useState<string>('₹');
-  const [institution, setInstitution] = useState<string>(
-    profile?.institutionOrEmployer || (profileType === 'student' ? 'College / University' : 'Company Name')
-  );
-  const [savingsTarget, setSavingsTarget] = useState<string>(profileType === 'student' ? '3000' : '15000');
+  const [income, setIncome] = useState<string>(profile?.monthlyIncome ? String(profile.monthlyIncome) : '');
+  const [currency, setCurrency] = useState<string>(profile?.currency || '₹');
+  const [institution, setInstitution] = useState<string>(profile?.institutionOrEmployer || '');
+  const [savingsTarget, setSavingsTarget] = useState<string>(profile?.savingsTargetMonthly ? String(profile.savingsTargetMonthly) : '');
   const [saving, setSaving] = useState(false);
 
   const userName = user?.displayName || user?.email?.split('@')[0] || 'there';
 
   const handleTypeSelect = (type: ProfileType) => {
     setProfileType(type);
-    if (type === 'student') {
-      setIncome('15000');
-      setSavingsTarget('3000');
-      setInstitution('College / University');
-    } else {
-      setIncome('65000');
-      setSavingsTarget('15000');
-      setInstitution('Company Name');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

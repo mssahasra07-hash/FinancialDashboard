@@ -130,7 +130,7 @@ export const GoalsView: React.FC = () => {
     ? [
         { name: 'Semester Break Goa/Hill Trip', amount: 8000, category: 'Trip', icon: Compass },
         { name: 'Coding Laptop / Tablet', amount: 55000, category: 'Tech', icon: Laptop },
-        { name: 'Student Emergency Buffer', amount: 10000, category: 'Emergency Fund', icon: Shield },
+        { name: 'Student Emergency Fund', amount: 10000, category: 'Emergency Fund', icon: Shield },
         { name: 'Online Tech Certification', amount: 5000, category: 'Course', icon: BookOpen },
         { name: 'Smartphone Upgrade', amount: 20000, category: 'Phone', icon: Smartphone },
       ]

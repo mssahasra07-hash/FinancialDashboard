@@ -24,14 +24,14 @@ export async function getOrCreateUser(uid: string, email: string, displayName?: 
       })
       .returning();
 
-    // Default profile for new user - Clean slate with Indian Rupees ₹
+    // Default profile for new user - Clean slate with Indian Rupees ₹ and zeroed initial values
     await db.insert(profiles).values({
       userId: uid,
       profileType: 'student',
-      monthlyIncome: 15000,
+      monthlyIncome: 0,
       currency: '₹',
       institutionOrEmployer: '',
-      savingsTargetMonthly: 3000,
+      savingsTargetMonthly: 0,
       themeMode: 'light',
       accentColor: 'indigo',
       dashboardBg: 'default',
@@ -72,10 +72,10 @@ export async function updateUserProfile(uid: string, data: Partial<typeof profil
       const inserted = await db.insert(profiles).values({
         userId: uid,
         profileType: data.profileType || 'student',
-        monthlyIncome: data.monthlyIncome ?? 15000,
+        monthlyIncome: data.monthlyIncome ?? 0,
         currency: data.currency || '₹',
         institutionOrEmployer: data.institutionOrEmployer || '',
-        savingsTargetMonthly: data.savingsTargetMonthly ?? 3000,
+        savingsTargetMonthly: data.savingsTargetMonthly ?? 0,
         themeMode: data.themeMode || 'light',
         accentColor: data.accentColor || 'indigo',
         onboardingCompleted: data.onboardingCompleted ?? true,
